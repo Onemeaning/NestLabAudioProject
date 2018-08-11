@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.getFileList();
                 Toast.makeText(MainActivity.this, "录音文件以保存到" + baocunlujin.getName() + "文件夹中", Toast.LENGTH_SHORT).show();
             }
-            //修改之后尝试更新看看是什么效果
+            //修改之后尝试更新看看是什么效果，这是从GitHub中修改的文件，是否能pull到我的项目中去呢
         }
     };
 
