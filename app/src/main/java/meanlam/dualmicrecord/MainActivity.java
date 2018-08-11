@@ -103,9 +103,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        initViewId();
+        makeDirs();
+        requestPermissions();//6.0以上需要权限申请
+        micInstance = AudioRecordFunc.getInstance();
+        MainActivity.this.getFileList();
+        liebiao.setOnItemClickListener(new OnItemClickListenerImp());
+    }
+
+    /**
+     * 初始化布局控件
+     */
+    private void initViewId()
+    {
         context = this;
-
-
         rl = (RelativeLayout) findViewById(R.id.rl);
         mButton = (Button) findViewById(R.id.button);
         mButtonclear = findViewById(R.id.buttonclear);
@@ -119,16 +131,7 @@ public class MainActivity extends AppCompatActivity {
         mImageView = (ImageView) view.findViewById(R.id.iv_recording_icon);
         mViewTime = (TextView) view.findViewById(R.id.tv_recording_time);
         tv_cancel = (TextView) view.findViewById(R.id.tv_recording_info);
-        makeDirs();
-        //6.0以上需要权限申请
-        requestPermissions();
-
-        micInstance = AudioRecordFunc.getInstance();
-
-        MainActivity.this.getFileList();
-        liebiao.setOnItemClickListener(new OnItemClickListenerImp());
     }
-
     /**
      * 用于实时获取手机麦克风的音量大小
      * @author
