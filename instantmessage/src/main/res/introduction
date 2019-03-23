@@ -1,0 +1,4 @@
+这个项目是一个涉及到语音通信的功能的即使通信项目，目的是开发出一个可以通过Tomcat 服务器转发语音短消息进行通信，我们希望能够实现一个可以与服务器进行长连接通信
+                                    涉及到的关键技术
+1、安卓语音API（MediaRecord，AudioRecord，其实MediaRecord是把AudioRecord进行封装了，所以其使用简单，但是功能受到了限制），AudioTrace，MediaPlayer，WebSocket，TCP/IP
+2、多线程技术处理（JAVA内置的 ExecutorService，使用简单，功能强大，内置各种线程组线程池）

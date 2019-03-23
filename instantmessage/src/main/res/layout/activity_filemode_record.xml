@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AudioActivities.FilemodeRecord"
+    android:orientation="vertical">
+
+
+    <include
+        layout="@layout/app_bar_filerecord"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        android:id="@+id/filemodePlayFile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/darker_gray"
+        android:hint="输入音频的名字，带后缀,默认在record文件夹"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/tv_filemodeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="hello data"
+        android:textSize="30sp"
+        android:gravity="center"
+        android:textColor="@color/colorPrimary"/>
+
+
+    <Button
+        android:id="@+id/bt_filemodeRecord"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="300dp"
+        android:layout_marginBottom="20dp"
+        android:background="@color/colorPrimary"
+        android:text="@string/fileModeRecord"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/bt_filemodePlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="20dp"
+        android:background="@color/colorPrimary"
+        android:text="@string/fileModePlay"
+        android:textColor="@android:color/white" />
+
+</LinearLayout>
