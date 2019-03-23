@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SoundRecordingDemo.iml" filepath="$PROJECT_DIR$/SoundRecordingDemo.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mylibrary/mylibrary.iml" filepath="$PROJECT_DIR$/mylibrary/mylibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NestLabAudioProject.iml" filepath="$PROJECT_DIR$/NestLabAudioProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/instantmessage/instantmessage.iml" filepath="$PROJECT_DIR$/instantmessage/instantmessage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/uploadLocation/uploadLocation.iml" filepath="$PROJECT_DIR$/uploadLocation/uploadLocation.iml" />
     </modules>
   </component>
 </project>
