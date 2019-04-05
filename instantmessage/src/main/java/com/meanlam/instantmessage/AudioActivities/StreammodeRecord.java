@@ -1,9 +1,11 @@
 package com.meanlam.instantmessage.AudioActivities;
 
+import android.content.res.AssetFileDescriptor;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
@@ -17,7 +19,6 @@ import android.widget.TextView;
 
 import com.meanlam.instantmessage.Client;
 import com.meanlam.instantmessage.R;
-import com.meanlam.instantmessage.socket.ReceiveMessageThread;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,13 +45,21 @@ public class StreammodeRecord extends AppCompatActivity {
     @BindView(R.id.bt_streammodePlay)
     Button mButtonPlay;
 
+    @BindView(R.id.bt_chcTest)
+    Button chcButtnon;
+
     //表示录音状态的，确保多线访问时状态量保持相同
     private volatile boolean         isRecording;
-    private          ExecutorService mExecutorService;
+
+    private          ExecutorService mExecutorService;//这个是用于创建单线程的，用于处理一次录音或者是一次播放音频的线程
+    private ExecutorService mulitiServices;//这个线程池是需要实现同时播放和采集音频的，至少需要两个线程的
+
     private          File            mAudioFile;
+//    private File mAudioFiletest ;
     private          long            startRecordTime,stopRecordTiem;
     private  byte[] mBuffer;
     private AudioRecord mAudioRecord;
+
     private FileOutputStream mFileOutputStream;
 
     private static final int  BUFFER_SIZE = 2048;
@@ -61,6 +70,10 @@ public class StreammodeRecord extends AppCompatActivity {
     OutputStream os;
     Socket socket;
     InputStream is = null;
+
+
+    private MediaPlayer mMediaPlayer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +81,7 @@ public class StreammodeRecord extends AppCompatActivity {
 
         ButterKnife.bind(this);
         mExecutorService = Executors.newSingleThreadExecutor();
+        mulitiServices = Executors.newFixedThreadPool(2);//固定核心线程池的个数为2
         mBuffer = new byte[BUFFER_SIZE];
 
         Toolbar toolbar =  findViewById(R.id.toolbar1);
@@ -130,6 +144,49 @@ public class StreammodeRecord extends AppCompatActivity {
         }
     }
 
+    @OnClick(R.id.bt_chcTest)
+    public void chcFun()
+    {
+
+        if (!isPlaying)
+        {
+            isPlaying = true;
+            chcButtnon.setText("正在播放");
+            chcButtnon.setBackgroundResource(R.color.colorAccent);
+
+
+            mulitiServices.submit(new Runnable() {
+                @Override
+                public void run() {
+//                    mAudioFiletest = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/chc/"+"test.wav");
+//                    Log.i("STREAMMODE", "paly1: "+mAudioFiletest.getAbsolutePath());
+                    doFilePlay();
+                }
+            });
+
+            //同时提交另一个线程用于开启录音功能
+            mulitiServices.submit(new Runnable() {
+                @Override
+                public void run() {
+                    isRecording = true;
+                    //录音成功且播放没有结束时
+                    if(!startRecord())
+                    {
+                        recordFail();
+                    }
+                }
+            }) ;
+
+        }
+        else
+        {
+            showInfo.setText("");
+            showInfo.setText("没有选中录音文件呐");
+        }
+
+
+    }
+
 
     private void doPlay(File audioFile) {
 //        配置播放器
@@ -186,6 +243,7 @@ public class StreammodeRecord extends AppCompatActivity {
         }
         finally {
             isPlaying = false;
+            isRecording = false;//音频播放结束，并且将录音关闭；
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -236,17 +294,14 @@ public class StreammodeRecord extends AppCompatActivity {
             //        记录开始语音时间，用于统计录音时长
             startRecordTime = System.currentTimeMillis();
 
+            /**
+             * 以下的内容是暂时关闭的，如果要实现远程数据流传送的话，则需要打开
+              */
+ /*
 //            创建Socket对象
              socket = new Socket("192.168.137.1",6768);
             //2、获取输出流，向服务器端发送信息
-              os = socket.getOutputStream();//字节输出流
-
-
-
-
-            //        循环读取数据写到输出流中
-//            new SendMessageThread(socket,isRecording,os,mAudioRecord,mBuffer,BUFFER_SIZE,mFileOutputStream).start();
-
+              os = socket.getOutputStream();//字节输出流*/
 
 
             while(isRecording)
@@ -255,8 +310,8 @@ public class StreammodeRecord extends AppCompatActivity {
                 if(read>0)
                 {
 //                    Log.i("MEAN", "startRecord: "+ Arrays.toString(mBuffer));
-                    os.write(mBuffer,0,read);
-                    os.flush();
+                 /*   os.write(mBuffer,0,read);
+                    os.flush();*/
 
                     //   读取成功，写入文件，获取写入到手机内存中去
                   mFileOutputStream.write(mBuffer);
@@ -318,7 +373,10 @@ public class StreammodeRecord extends AppCompatActivity {
                     }
                 });
             }
-           ReceiveMessageThread rs =  new ReceiveMessageThread(socket);
+            /**
+             * 暂时需要注释掉，方便chc使用
+             */
+    /*       ReceiveMessageThread rs =  new ReceiveMessageThread(socket);
            final String msg =  rs.getMsgFromServer();
             runOnUiThread(new Runnable() {
                 @Override
@@ -327,7 +385,7 @@ public class StreammodeRecord extends AppCompatActivity {
                     showInfo.setText(msg);
                     mAudioFile.delete();
                 }
-            });
+            });*/
 
         }
         catch (Exception e)
@@ -385,6 +443,100 @@ public class StreammodeRecord extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
+
+
+
+    /**
+     * 实际播放逻辑
+     * @param audioFile
+     */
+    private void doFilePlay() {
+        //配置我们的播放器MediaPlay
+        mMediaPlayer = new MediaPlayer();
+        try{
+            //        捕获异常，防止闪退
+
+//            mMediaPlayer.setDataSource(Environment.getExternalStorageDirectory().getAbsolutePath()+"/chc/"+"test.wav");
+            AssetFileDescriptor file = this.getResources().openRawResourceFd(R.raw.test);
+            mMediaPlayer.setDataSource(file.getFileDescriptor(),file.getStartOffset(), file.getLength());
+            file.close();
+
+            //设置监听回调
+            mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    //                    播放结束，释放播放器
+                    stopFilePlay();
+                }
+            });
+
+            mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    //                     提示用户
+                    playFileFail();
+                    //                    释放播放器
+                    stopFilePlay();
+                    //                  错误已经处理，返回true
+                    return true;
+                }
+            });
+            //            配置音量是否循环,不循环
+            mMediaPlayer.setVolume(1,1);
+            mMediaPlayer.setLooping(false);
+
+            mMediaPlayer.prepare();
+            mMediaPlayer.start();
+
+        }catch (RuntimeException | IOException e)
+        {
+            e.printStackTrace();
+            //            提醒用户播放失败
+            playFileFail();
+            //            释放播放器
+            stopFilePlay();
+
+        }
+
+    }
+
+    private void playFileFail() {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showInfo.setText("");
+                showInfo.setText("播放失败");
+            }
+        });
+
+    }
+
+    private void stopFilePlay() {
+        //充值我们的播放状态
+        isPlaying = false;
+        isRecording = false;
+        chcButtnon.setText(R.string.chc);
+        chcButtnon.setBackgroundResource(R.color.colorPrimary);
+
+
+        //        释放播放器
+        if (mMediaPlayer!=null)
+        {
+            //            重置监听器，防止内存泄漏
+
+            mMediaPlayer.setOnCompletionListener(null);
+            mMediaPlayer.setOnErrorListener(null);
+
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
+    }
+
 
     @Override
     protected void onDestroy() {
